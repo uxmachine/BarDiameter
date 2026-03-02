@@ -131,35 +131,14 @@ def _largest_closed_curve_area(intersection_curves, rg) -> Tuple[float, int]:
     return largest, similar
 
 
-def _nearest_topology_vertex_index(topo_vertices, point) -> int:
-    """Return nearest topology vertex index for Rhino versions with differing APIs."""
-    # Rhino versions differ here: some expose ClosestTopologyVertex, others don't.
-    if hasattr(topo_vertices, "ClosestTopologyVertex"):
-        return topo_vertices.ClosestTopologyVertex(point)
-
-    best_i = -1
-    best_d2 = float("inf")
-    for i in range(topo_vertices.Count):
-        v = topo_vertices[i]
-        dx = v.X - point.X
-        dy = v.Y - point.Y
-        dz = v.Z - point.Z
-        d2 = dx * dx + dy * dy + dz * dz
-        if d2 < best_d2:
-            best_d2 = d2
-            best_i = i
-
-    if best_i < 0:
-        raise RuntimeError("Failed to find nearest topology vertex.")
-    return best_i
-
-
 def run_mvp(settings: Settings | None = None):
     settings = settings or Settings()
 
     try:
+        import Rhino
         import Rhino.Geometry as rg
         import rhinoscriptsyntax as rs
+        import scriptcontext as sc
     except ImportError as exc:
         raise RuntimeError("This script must run inside Rhino's Python environment.") from exc
 
@@ -182,8 +161,8 @@ def run_mvp(settings: Settings | None = None):
     topo = mesh_obj.TopologyVertices
     edges = mesh_obj.TopologyEdges
 
-    start_tv = _nearest_topology_vertex_index(topo, p_start)
-    end_tv = _nearest_topology_vertex_index(topo, p_end)
+    start_tv = topo.ClosestTopologyVertex(p_start)
+    end_tv = topo.ClosestTopologyVertex(p_end)
 
     adjacency = _build_adjacency(edges, topo.Count)
     tv_path = _dijkstra_path(adjacency, start_tv, end_tv)
