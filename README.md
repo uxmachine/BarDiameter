@@ -39,3 +39,17 @@ Then:
 - Meant for local single-bar windows; heavy merges still fail.
 - Confidence is a heuristic based on invalid station ratio.
 - No UI panel yet; output is command-line text.
+
+
+## Troubleshooting merge-conflict regressions
+If you had to click **Accept Incoming Changes** in GitHub, confirm your local `src/rhino_rebar_diameter_mvp.py` still contains both compatibility fixes:
+
+- `_nearest_topology_vertex_index(...)` helper and these calls in `run_mvp`:
+  - `start_tv = _nearest_topology_vertex_index(topo, p_start)`
+  - `end_tv = _nearest_topology_vertex_index(topo, p_end)`
+- `_build_adjacency(...)` must use `topo_vertices[tv0]` / `topo_vertices[tv1]` (not `topology_edges.TopologyVertices[...]`).
+
+When running, it now prints a script version line first:
+`BarDiameter MVP script version: 2026-03-compat-2`
+
+If you do not see that line, you are running an older file copy.

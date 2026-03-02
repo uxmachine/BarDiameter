@@ -14,6 +14,8 @@ from typing import Dict, Iterable, List, Sequence, Tuple
 
 from diameter_stats import equivalent_diameter_from_area, summarize_diameters
 
+SCRIPT_VERSION = "2026-03-compat-2"
+
 
 @dataclass
 class Settings:
@@ -156,6 +158,7 @@ def _nearest_topology_vertex_index(topo_vertices, point) -> int:
 
 def run_mvp(settings: Settings | None = None):
     settings = settings or Settings()
+    print("BarDiameter MVP script version:", SCRIPT_VERSION)
 
     try:
         import Rhino.Geometry as rg
