@@ -1,0 +1,73 @@
+# BarDiameter MVP Tool
+
+This repository now includes an MVP Rhino Python tool that automates:
+
+1. pick 2 points on a mesh rebar segment,
+2. generate section stations along the local mesh path,
+3. compute equivalent diameters from section areas,
+4. return robust summary statistics and confidence.
+
+## Files
+- `src/rhino_rebar_diameter_mvp.py`: Rhino-runner script.
+- `src/diameter_stats.py`: Robust stats helpers (pure Python).
+- `tests/test_diameter_stats.py`: Unit tests for helper math.
+
+## Rhino usage
+In Rhino's Python editor:
+
+```python
+import sys
+sys.path.append(r"<repo_path>/src")
+import rhino_rebar_diameter_mvp as tool
+tool.run_mvp()
+```
+
+Then:
+- select mesh,
+- pick point 1,
+- pick point 2,
+- read results in Rhino command history.
+
+## Current MVP behavior
+- Uses mesh-topology shortest path between picks.
+- Samples orthogonal planes every 25 mm (configurable in `Settings`).
+- Uses largest closed mesh-plane section loop per station.
+- Rejects likely fused stations with multiple similar-size loops.
+- Aggregates valid station diameters with robust median + IQR.
+
+## Known limitations
+- Meant for local single-bar windows; heavy merges still fail.
+- Confidence is a heuristic based on invalid station ratio.
+- No UI panel yet; output is command-line text.
+
+
+## Troubleshooting merge-conflict regressions
+If you had to click **Accept Incoming Changes** in GitHub, confirm your local `src/rhino_rebar_diameter_mvp.py` still contains both compatibility fixes:
+
+- `_nearest_topology_vertex_index(...)` helper and these calls in `run_mvp`:
+  - `start_tv = _nearest_topology_vertex_index(topo, p_start)`
+  - `end_tv = _nearest_topology_vertex_index(topo, p_end)`
+- `_build_adjacency(...)` must use `topo_vertices[tv0]` / `topo_vertices[tv1]` (not `topology_edges.TopologyVertices[...]`).
+
+When running, it now prints a script version line first:
+`BarDiameter MVP script version: 2026-03-compat-2`
+
+If you do not see that line, you are running an older file copy.
+
+
+## Getting code to GitHub and to a laptop without Git installed
+Recommended workflow:
+1. Keep development on a branch and open a Pull Request to `main`.
+2. After PR review, click **Merge** on GitHub (do not push directly to `main`).
+3. On your work laptop (no Git), download the repository as ZIP from GitHub:
+   - open repo page -> **Code** -> **Download ZIP**.
+4. Extract ZIP and point Rhino script path to extracted `src` folder.
+5. In Rhino, run the script and confirm version print line appears:
+   `BarDiameter MVP script version: 2026-03-compat-2`.
+
+Conflict resolution tips in GitHub PR UI:
+- Prefer keeping the newer compatibility code for `src/rhino_rebar_diameter_mvp.py`.
+- After resolving conflicts, verify file still contains:
+  - `_nearest_topology_vertex_index(...)` usage in `run_mvp`,
+  - `_build_adjacency(..., topo_vertices, ...)` with `topo_vertices[tv0/tv1]`,
+  - `SCRIPT_VERSION = "2026-03-compat-2"` and startup print.
